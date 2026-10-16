@@ -42,7 +42,7 @@ dropdownSection.insertBefore(toText, convertedCurrency)
 function addOption(select, option, text) {
     const optionArray = Array.from(select.options)
     if(!optionArray.some(options => options.value === option)) {
-            let newOption = document.createElement("option")
+        let newOption = document.createElement("option")
 
         newOption.value = option
         newOption.text = text
@@ -76,7 +76,6 @@ async function countriesApiIntegration () {
 }
 
 countriesApiIntegration().then(data => {
-    console.log(data)
     function populateDropdown (data) {
         data.forEach(country => {
             if(country.currencies.length !== 0) {
@@ -114,7 +113,7 @@ async function exchangeApiIntegration (code) {
 
 let outputContainer = document.getElementById("output-container")
 
-convertButton.addEventListener("click", () => {
+function convertCurrency () {
     if(inputField.value === "") return
 
     exchangeApiIntegration(initialCurrency.value).then(data => {
@@ -122,5 +121,12 @@ convertButton.addEventListener("click", () => {
         const exchangedAmount = (inputField.value * exchangeRate).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})
         outputContainer.textContent = `${inputField.value} ${initialCurrency.value} = ${exchangedAmount} ${convertedCurrency.value}`
     })
-})
+}
 
+convertButton.addEventListener("click", convertCurrency)
+
+inputField.addEventListener("keydown", (event) => {
+    if(event.key === "Enter") {
+        convertCurrency()
+    }
+})
