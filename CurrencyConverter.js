@@ -28,28 +28,62 @@ inputField.classList.add("input-field-style")
 
 inputContainer.appendChild(inputField)
 
-let initialCurrency = document.getElementById("initial-currency")
-let convertedCurrency = document.getElementById("converted-currency")
-initialCurrency.classList.add("dropdown-menu-style")
-convertedCurrency.classList.add("dropdown-menu-style")
+let initialCurrencyDropdown = document.getElementById("initial-currency-dropdown")
+let convertedCurrencyDropdown = document.getElementById("converted-currency-dropdown")
+initialCurrencyDropdown.classList.add("currency-dropdown")
+convertedCurrencyDropdown.classList.add("currency-dropdown")
 
 let toText = document.createElement("label")
 toText.textContent = " TO "
 toText.classList.add("totext-style")
 
-dropdownSection.insertBefore(toText, convertedCurrency)
+dropdownSection.insertBefore(toText, convertedCurrencyDropdown)
 
-function addOption(select, option, text) {
-    const optionArray = Array.from(select.options)
-    if(!optionArray.some(options => options.value === option)) {
-        let newOption = document.createElement("option")
 
-        newOption.value = option
-        newOption.text = text
+const initialDropdownButton = document.getElementById("initial-dropdown-button")
+const convertDropdownButton = document.getElementById("converted-dropdown-button")
+initialDropdownButton.classList.add("currency-dropdown-button");
+convertDropdownButton.classList.add("currency-dropdown-button");
 
-        select.appendChild(newOption)
-    }
+
+const initialDropdownOptions = document.getElementById("initial-currency-options")
+const convertDropdownOptions = document.getElementById("converted-currency-options")
+initialDropdownOptions.classList.add("currency-options");
+convertDropdownOptions.classList.add("currency-options");
+
+initialDropdownButton.addEventListener("click", () => {
+    initialDropdownOptions.classList.toggle("show")
+})
+
+convertDropdownButton.addEventListener("click", () => {
+    convertDropdownOptions.classList.toggle("show")
+})
+
+function addOption(optionsContainer, code, text, image, button) {
+    const optionArray = Array.from(optionsContainer.children)
+
+    if (optionArray.some(option => option.dataset.currency === code)) return
+
+    const option = document.createElement("div")
+    option.className = "currency-option"
+
+    const img = document.createElement("img")
+    img.src = `https://flags.restcountries.com/v5/w320/${image.toLowerCase()}.png`
+
+    const span = document.createElement("span")
+    span.textContent = `${code} - ${text}`
+
+    option.append(img, span)
+
+    option.addEventListener("click", () => {
+        button.replaceChildren(img.cloneNode(), span.cloneNode(true));
+        button.dataset.currency = code;
+        optionsContainer.classList.remove("show");
+    });
+
+    optionsContainer.appendChild(option);
 }
+
 
 let convertButton = document.getElementById("conversion-button")
 convertButton.textContent = "Convert"
@@ -78,11 +112,11 @@ async function countriesApiIntegration () {
 countriesApiIntegration().then(data => {
     function populateDropdown (data) {
         data.forEach(country => {
-            if(country.currencies.length !== 0) {
-                for(let i=0; i < country.currencies.length; i++) {
-                    addOption(initialCurrency, country.currencies[i]?.code, `${country.flag?.emoji} ${country.currencies[i]?.code} - ${country.currencies[i]?.name}`)
-                    addOption(convertedCurrency, country.currencies[i]?.code, `${country.flag?.emoji} ${country.currencies[i]?.code} - ${country.currencies[i]?.name}`)
-                }
+            if(country.currencies.length > 0) {
+                country.currencies.forEach(currency => {
+                    addOption(initialDropdownOptions, currency?.code, currency?.name, country?.flag?.emoji, initialDropdownButton)
+                    addOption(convertDropdownOptions, currency?.code, currency?.name, country?.flag?.emoji, convertDropdownButton)
+                })
             }
         })
     }
@@ -116,10 +150,10 @@ let outputContainer = document.getElementById("output-container")
 function convertCurrency () {
     if(inputField.value === "") return
 
-    exchangeApiIntegration(initialCurrency.value).then(data => {
-        const exchangeRate = data.conversion_rates[convertedCurrency.value]
+    exchangeApiIntegration(initialDropdownButton.dataset.currency).then(data => {
+        const exchangeRate = data.conversion_rates[convertDropdownButton.dataset.currency]
         const exchangedAmount = (inputField.value * exchangeRate).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})
-        outputContainer.textContent = `${inputField.value} ${initialCurrency.value} = ${exchangedAmount} ${convertedCurrency.value}`
+        outputContainer.textContent = `${inputField.value} ${initialDropdownButton.dataset.currency} = ${exchangedAmount} ${convertDropdownButton.dataset.currency}`
     })
 }
 
